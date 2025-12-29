@@ -291,7 +291,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-black p-0 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-black p-0 sm:p-4 pb-safe">
       {showConfirmFinish && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
@@ -388,7 +388,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
             {renderQuestion(currentQuestion, currentIndex)}
 
             {viewingSolutions && (
-              <div className="flex gap-3 mb-6">
+              <div className="flex justify-center gap-3 mb-8 pb-4">
                 <button
                   onClick={handlePrevious}
                   disabled={currentIndex === 0}
@@ -400,7 +400,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
 
                 <button
                   onClick={backToResults}
-                  className="flex-1 px-5 py-3 bg-primary hover:bg-primary-hover text-dark-bg font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                  className="px-5 py-3 bg-primary hover:bg-primary-hover text-dark-bg font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
                 >
                   Back to Results
                 </button>
@@ -417,7 +417,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
             )}
 
             {!viewingSolutions && (
-              <div className="flex gap-3 mb-6">
+              <div className="flex justify-center gap-3 mb-8 pb-4">
                 <button
                   onClick={handlePrevious}
                   disabled={currentIndex === 0}
@@ -430,7 +430,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
                 {showSubmitButton && (
                   <button
                     onClick={handleSubmit}
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-dark-bg font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-dark-bg font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
                   >
                     <Send className="w-4 h-4" />
                     Submit

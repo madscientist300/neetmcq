@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Grid3x3, X } from 'lucide-react';
 
 interface QuestionStatus {
@@ -20,6 +20,72 @@ export function QuestionNavRing({
   onNavigate,
 }: QuestionNavRingProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Initialize position to bottom-right
+  useEffect(() => {
+    setPosition({
+      x: window.innerWidth - 88, // 64px button + 24px margin
+      y: window.innerHeight - 88,
+    });
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (isExpanded) return;
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    });
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isExpanded) return;
+    const touch = e.touches[0];
+    setIsDragging(true);
+    setDragStart({
+      x: touch.clientX - position.x,
+      y: touch.clientY - position.y,
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    const newX = Math.max(0, Math.min(window.innerWidth - 64, e.clientX - dragStart.x));
+    const newY = Math.max(0, Math.min(window.innerHeight - 64, e.clientY - dragStart.y));
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    const newX = Math.max(0, Math.min(window.innerWidth - 64, touch.clientX - dragStart.x));
+    const newY = Math.max(0, Math.min(window.innerHeight - 64, touch.clientY - dragStart.y));
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleTouchMove);
+      window.addEventListener('touchend', handleMouseUp);
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchend', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart, position]);
 
   const getCircleColor = (index: number) => {
     const status = questionStatuses[index];
@@ -51,14 +117,28 @@ export function QuestionNavRing({
     setIsExpanded(false);
   };
 
+  const handleButtonClick = () => {
+    if (!isDragging) {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   const attemptedCount = questionStatuses.filter(s => s.attempted).length;
   const correctCount = questionStatuses.filter(s => s.correct === true).length;
 
   return (
     <>
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-primary hover:bg-primary-hover text-dark-bg rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary/50"
+        ref={buttonRef}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onClick={handleButtonClick}
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          cursor: isDragging ? 'grabbing' : 'grab',
+        }}
+        className="fixed z-50 w-16 h-16 bg-primary hover:bg-primary-hover text-dark-bg rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary/50 touch-none"
         aria-label="Toggle question navigation"
       >
         {isExpanded ? (

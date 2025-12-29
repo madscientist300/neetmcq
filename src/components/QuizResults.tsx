@@ -127,7 +127,7 @@ export function QuizResults({
   const accuracy = attemptedCount > 0 ? (correctCount / attemptedCount) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-4">
+    <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-0 sm:p-4">
       <div className="max-w-5xl mx-auto py-8">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 dark:bg-primary/30 mb-5 border-4 border-primary">
@@ -296,10 +296,10 @@ export function QuizResults({
               <div
                 key={index}
                 className={`flex items-start gap-3 p-4 rounded-xl border ${suggestion.type === 'success'
-                    ? 'bg-green-50 dark:bg-green-900/20 border-green-500/30'
-                    : suggestion.type === 'warning'
-                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500/30'
-                      : 'bg-blue-50 dark:bg-blue-900/20 border-blue-500/30'
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-500/30'
+                  : suggestion.type === 'warning'
+                    ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500/30'
+                    : 'bg-blue-50 dark:bg-blue-900/20 border-blue-500/30'
                   }`}
               >
                 {suggestion.type === 'success' ? (

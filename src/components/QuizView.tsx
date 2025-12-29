@@ -291,7 +291,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-black p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-black p-0 sm:p-4">
       {showConfirmFinish && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">

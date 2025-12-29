@@ -177,7 +177,7 @@ export function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-100 dark:from-gray-900 dark:via-purple-900 dark:to-black">
       <nav className="bg-white/70 dark:bg-dark-card/30 backdrop-blur-xl shadow-lg border-b border-gray-200/50 dark:border-dark-border/50 pt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-10 md:px-10 lg:px-8">
+        <div className="max-w-7xl mx-auto px-0 sm:px-10 md:px-10 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <Shield className="w-8 h-8 text-purple-600 dark:text-purple-400" />
@@ -211,7 +211,7 @@ export function AdminDashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-10 md:px-10 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-0 sm:px-10 md:px-10 lg:px-8 py-8">
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>

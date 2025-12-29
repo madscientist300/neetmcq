@@ -313,7 +313,7 @@ export function StudentDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-black">
       <nav className="bg-white/70 dark:bg-dark-card/30 backdrop-blur-xl border-b border-gray-200/50 dark:border-dark-border/50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-10 md:px-10 lg:px-8">
+        <div className="max-w-7xl mx-auto px-0 sm:px-10 md:px-10 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
               <BookOpen className="w-8 h-8 text-green-600 dark:text-green-400" />
@@ -354,7 +354,7 @@ export function StudentDashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-10 md:px-10 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-0 sm:px-10 md:px-10 lg:px-8 py-8">
         <div className="bg-white/70 dark:bg-dark-card/30 backdrop-blur-xl rounded-card shadow-card-light dark:shadow-card-dark border border-white/50 dark:border-dark-border/50 p-6">
           <QuestionFilters
             subjects={subjects}

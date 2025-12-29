@@ -57,7 +57,7 @@ export function Login({ onSwitchToRegister }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-green-50 to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-black flex items-center justify-center p-0 sm:p-4">
       <div className="bg-light-card/70 dark:bg-dark-card/30 backdrop-blur-xl rounded-card shadow-card-light dark:shadow-card-dark w-full max-w-md p-8 border border-light-border/50 dark:border-dark-border/50">
         <div className="flex items-center justify-center mb-8">
           <div className="bg-primary/20 dark:bg-primary/30 p-4 rounded-full border-4 border-primary">

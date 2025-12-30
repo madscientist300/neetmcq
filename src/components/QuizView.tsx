@@ -267,9 +267,14 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
             <h4 className="font-semibold text-light-text dark:text-dark-text mb-2 text-base">
               Explanation
             </h4>
-            <p className="text-light-text-secondary dark:text-dark-text-secondary text-sm leading-relaxed">
-              {question.explanation}
-            </p>
+            <div className="text-light-text-secondary dark:text-dark-text-secondary text-sm leading-relaxed markdown-preview">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex, rehypeRaw]}
+              >
+                {question.explanation}
+              </ReactMarkdown>
+            </div>
           </div>
         )}
 

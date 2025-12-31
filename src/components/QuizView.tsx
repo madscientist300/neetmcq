@@ -263,11 +263,11 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
         </div>
 
         {(status.attempted || viewingSolutions) && question.explanation && (
-          <div className="mb-6 p-5 bg-light-section dark:bg-dark-section border-l-4 border-primary rounded-lg">
+          <div className="mb-6 p-5 bg-light-section dark:bg-dark-section border-l-4 border-primary rounded-lg max-w-full overflow-hidden">
             <h4 className="font-semibold text-light-text dark:text-dark-text mb-2 text-base">
               Explanation
             </h4>
-            <div className="text-light-text-secondary dark:text-dark-text-secondary text-sm leading-relaxed markdown-preview">
+            <div className="text-light-text-secondary dark:text-dark-text-secondary text-sm leading-relaxed markdown-preview overflow-x-auto max-w-full break-words">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex, rehypeRaw]}

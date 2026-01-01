@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { QuestionNavRing } from './QuestionNavRing';
 import { QuizResults } from './QuizResults';
-import { ChevronLeft, ChevronRight, Send, X, LayoutList, FileText } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, X, LayoutList, FileText, ArrowRight, Home } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -53,6 +53,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
   const [showResults, setShowResults] = useState(false);
   const [viewMode, setViewMode] = useState<'single' | 'all'>('single');
   const [viewingSolutions, setViewingSolutions] = useState(false);
+  const [solutionFilter, setSolutionFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
 
   const currentQuestion = questions[currentIndex];
   const currentStatus = questionStatuses[currentIndex];
@@ -372,6 +373,46 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {viewingSolutions && (
+                <div className="flex bg-light-section dark:bg-dark-section rounded-xl p-1 border border-light-border dark:border-dark-border mr-2">
+                  <button
+                    onClick={() => {
+                      setSolutionFilter('all');
+                      setViewMode('all');
+                    }}
+                    className={`px-3 py-2 text-sm rounded-lg transition-all ${solutionFilter === 'all'
+                      ? 'bg-light-card dark:bg-dark-card text-primary shadow-sm font-semibold'
+                      : 'text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-dark-text'
+                      }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSolutionFilter('correct');
+                      setViewMode('all');
+                    }}
+                    className={`px-3 py-2 text-sm rounded-lg transition-all ${solutionFilter === 'correct'
+                      ? 'bg-light-card dark:bg-dark-card text-green-600 dark:text-green-400 shadow-sm font-semibold'
+                      : 'text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-dark-text'
+                      }`}
+                  >
+                    Correct
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSolutionFilter('incorrect');
+                      setViewMode('all');
+                    }}
+                    className={`px-3 py-2 text-sm rounded-lg transition-all ${solutionFilter === 'incorrect'
+                      ? 'bg-light-card dark:bg-dark-card text-red-600 dark:text-red-400 shadow-sm font-semibold'
+                      : 'text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text dark:hover:text-dark-text'
+                      }`}
+                  >
+                    Incorrect
+                  </button>
+                </div>
+              )}
               {!viewingSolutions && (
                 <div className="flex bg-light-section dark:bg-dark-section rounded-xl p-1 border border-light-border dark:border-dark-border">
                   <button
@@ -491,7 +532,16 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
           </>
         ) : (
           <div>
-            {questions.map((question, index) => renderQuestion(question, index))}
+            {questions
+              .map((question, index) => ({ question, index, status: questionStatuses[index] }))
+              .filter(({ status }) => {
+                if (!viewingSolutions) return true; // Show all during quiz
+                if (solutionFilter === 'all') return true;
+                if (solutionFilter === 'correct') return status.correct === true;
+                if (solutionFilter === 'incorrect') return status.attempted && status.correct === false;
+                return true;
+              })
+              .map(({ question, index }) => renderQuestion(question, index))}
             {!viewingSolutions && (
               <div className="flex justify-center mb-6">
                 <button
@@ -499,6 +549,24 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
                   className="px-8 py-3 bg-primary hover:bg-primary-hover text-dark-bg font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
                 >
                   Finish Test
+                </button>
+              </div>
+            )}
+            {viewingSolutions && (
+              <div className="flex justify-center gap-4 mb-8 pt-4">
+                <button
+                  onClick={() => setShowResults(true)}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-dark-bg font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
+                >
+                  <ArrowRight className="w-5 h-5 rotate-180" />
+                  Back to Results
+                </button>
+                <button
+                  onClick={onExit}
+                  className="flex items-center gap-2 px-6 py-3 bg-light-section dark:bg-dark-section hover:bg-light-hover dark:hover:bg-dark-hover text-light-text dark:text-dark-text font-bold rounded-xl transition-all border border-light-border dark:border-dark-border"
+                >
+                  <Home className="w-5 h-5" />
+                  Dashboard
                 </button>
               </div>
             )}

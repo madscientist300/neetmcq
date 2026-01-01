@@ -6,16 +6,39 @@ import {
   BookOpen,
   Target,
   AlertCircle,
-  BarChart3
+  BarChart3,
+  Flame,
 } from 'lucide-react';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import Confetti from 'react-confetti';
+import { useSpring, animated } from '@react-spring/web';
+import { useState, useEffect } from 'react';
 
 interface QuizResultsProps {
   totalQuestions: number;
   attemptedCount: number;
   correctCount: number;
   timeSpent: number;
+  bestStreak: number;
   onViewSolutions: () => void;
   onStartNew: () => void;
+}
+
+function AnimatedNumber({ value, suffix = '', prefix = '' }: { value: number; suffix?: string; prefix?: string }) {
+  const { number } = useSpring({
+    from: { number: 0 },
+    number: value,
+    delay: 200,
+    config: { mass: 1, tension: 20, friction: 10 },
+  });
+
+  return (
+    <animated.span>
+      {number.to((n) => `${prefix}${n.toFixed(suffix === '%' ? 1 : 0)}${suffix}`)}
+    </animated.span>
+  );
 }
 
 export function QuizResults({
@@ -23,6 +46,7 @@ export function QuizResults({
   attemptedCount,
   correctCount,
   timeSpent,
+  bestStreak,
   onViewSolutions,
   onStartNew,
 }: QuizResultsProps) {
@@ -39,6 +63,25 @@ export function QuizResults({
   const avgTimePerQuestion = attemptedCount > 0 ? timeSpent / attemptedCount : 0;
   const avgMinutes = Math.floor(avgTimePerQuestion / 60);
   const avgSeconds = Math.floor(avgTimePerQuestion % 60);
+
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (percentage >= 80) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [percentage]);
 
   const getPerformanceLevel = () => {
     if (percentage >= 90) return 'Outstanding';
@@ -119,6 +162,15 @@ export function QuizResults({
       });
     }
 
+    // Best streak praise
+    if (bestStreak >= 5) {
+      suggestions.push({
+        type: 'success',
+        title: '🔥 Great Streak!',
+        message: `You answered ${bestStreak} questions correctly in a row! This shows strong consistency. Keep it up!`
+      });
+    }
+
     return suggestions;
   };
 
@@ -126,13 +178,54 @@ export function QuizResults({
   const suggestions = getPerformanceSuggestions();
   const accuracy = attemptedCount > 0 ? (correctCount / attemptedCount) * 100 : 0;
 
+  // Donut chart data
+  const chartData = [
+    { name: 'Correct', value: correctCount, color: '#22C55E' },
+    { name: 'Incorrect', value: incorrectCount, color: '#EF4444' },
+    { name: 'Unattempted', value: unattemptedCount, color: '#6B7280' },
+  ];
+
+  // Circular gauge color
+  const getGaugeColor = () => {
+    if (percentage >= 70) return '#22C55E'; // Green
+    if (percentage >= 40) return '#F59E0B'; // Yellow
+    return '#EF4444'; // Red
+  };
+
   return (
     <div className="min-h-screen bg-light-bg dark:bg-dark-bg p-0 sm:p-4">
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={300}
+          colors={['#22C55E', '#FFD700', '#FFFFFF', '#86EFAC']}
+        />
+      )}
+
       <div className="max-w-5xl mx-auto py-8">
+        {/* Hero Section with Circular Gauge */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 dark:bg-primary/30 mb-5 border-4 border-primary">
-            <CheckCircle className="w-10 h-10 text-primary" />
+          <div className="w-48 h-48 mx-auto mb-6">
+            <CircularProgressbar
+              value={percentage}
+              text={`${percentage.toFixed(1)}%`}
+              styles={buildStyles({
+                pathColor: getGaugeColor(),
+                textColor: getGaugeColor(),
+                trailColor: '#1a1a1a',
+                pathTransitionDuration: 2,
+                textSize: '20px',
+              })}
+            />
           </div>
+
+          <div className="inline-flex items-center justify-center gap-2 mb-3">
+            <Target className="w-8 h-8 text-primary" />
+            <h2 className="text-3xl font-bold text-light-text dark:text-dark-text">{performance}</h2>
+          </div>
+
           <h1 className="text-4xl font-bold text-light-text dark:text-dark-text mb-3">
             Test Completed
           </h1>
@@ -141,22 +234,25 @@ export function QuizResults({
           </p>
         </div>
 
+        {/* Score Summary Card */}
         <div className="bg-light-card dark:bg-dark-card border-2 border-primary rounded-card p-8 mb-8 text-center shadow-card-light dark:shadow-card-dark">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Target className="w-8 h-8 text-primary" />
-            <h2 className="text-3xl font-bold text-light-text dark:text-dark-text">{performance}</h2>
-          </div>
           <div className="mb-4">
-            <p className="text-5xl font-bold text-primary mb-2">{totalMarks} / {maximumMarks}</p>
+            <p className="text-5xl font-bold text-primary mb-2">
+              <AnimatedNumber value={totalMarks} /> / {maximumMarks}
+            </p>
             <p className="text-lg text-light-text-secondary dark:text-dark-text-secondary">Total Marks</p>
           </div>
           <div className="flex justify-center gap-8 pt-4 border-t border-light-border dark:border-dark-border">
             <div>
-              <p className="text-2xl font-semibold text-primary">{percentage.toFixed(1)}%</p>
+              <p className="text-2xl font-semibold text-primary">
+                <AnimatedNumber value={percentage} suffix="%" />
+              </p>
               <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">Percentage</p>
             </div>
             <div>
-              <p className="text-2xl font-semibold text-primary">{accuracy.toFixed(1)}%</p>
+              <p className="text-2xl font-semibold text-primary">
+                <AnimatedNumber value={accuracy} suffix="%" />
+              </p>
               <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">Accuracy</p>
             </div>
           </div>
@@ -165,12 +261,13 @@ export function QuizResults({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Statistics Grid - 5 cards including Best Streak */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-light-card dark:bg-dark-card rounded-card shadow-card-light dark:shadow-card-dark p-6 text-center border border-light-border dark:border-dark-border hover:shadow-card-hover-light dark:hover:shadow-card-hover-dark transition-all">
             <CheckCircle className="w-10 h-10 text-primary mx-auto mb-3" />
             <p className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">Correct</p>
             <p className="text-3xl font-bold text-primary">
-              {correctCount}
+              <AnimatedNumber value={correctCount} />
             </p>
           </div>
 
@@ -178,7 +275,7 @@ export function QuizResults({
             <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
             <p className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">Incorrect</p>
             <p className="text-3xl font-bold text-red-500">
-              {incorrectCount}
+              <AnimatedNumber value={incorrectCount} />
             </p>
           </div>
 
@@ -186,7 +283,7 @@ export function QuizResults({
             <BookOpen className="w-10 h-10 text-light-text-secondary dark:text-dark-text-secondary mx-auto mb-3" />
             <p className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">Unattempted</p>
             <p className="text-3xl font-bold text-light-text-secondary dark:text-dark-text-secondary">
-              {unattemptedCount}
+              <AnimatedNumber value={unattemptedCount} />
             </p>
           </div>
 
@@ -194,12 +291,22 @@ export function QuizResults({
             <TrendingUp className="w-10 h-10 text-primary mx-auto mb-3" />
             <p className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">Accuracy</p>
             <p className="text-3xl font-bold text-primary">
-              {accuracy.toFixed(0)}%
+              <AnimatedNumber value={accuracy} suffix="%" />
+            </p>
+          </div>
+
+          <div className="bg-light-card dark:bg-dark-card rounded-card shadow-card-light dark:shadow-card-dark p-6 text-center border border-light-border dark:border-dark-border hover:shadow-card-hover-light dark:hover:shadow-card-hover-dark transition-all">
+            <Flame className={`w-10 h-10 mx-auto mb-3 ${bestStreak >= 5 ? 'text-orange-500' : 'text-light-text-secondary dark:text-dark-text-secondary'}`} />
+            <p className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1">Best Streak</p>
+            <p className={`text-3xl font-bold ${bestStreak >= 5 ? 'text-orange-500' : 'text-light-text-secondary dark:text-dark-text-secondary'}`}>
+              <AnimatedNumber value={bestStreak} />
             </p>
           </div>
         </div>
 
+        {/* Charts Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Time Analysis */}
           <div className="bg-light-card dark:bg-dark-card rounded-card shadow-card-light dark:shadow-card-dark p-6 border border-light-border dark:border-dark-border">
             <div className="flex items-center gap-3 mb-6">
               <Clock className="w-6 h-6 text-primary" />
@@ -230,61 +337,51 @@ export function QuizResults({
             </div>
           </div>
 
+          {/* Donut Chart */}
           <div className="bg-light-card dark:bg-dark-card rounded-card shadow-card-light dark:shadow-card-dark p-6 border border-light-border dark:border-dark-border">
             <div className="flex items-center gap-3 mb-6">
               <BarChart3 className="w-6 h-6 text-primary" />
-              <h3 className="text-xl font-bold text-light-text dark:text-dark-text">Score Breakdown</h3>
+              <h3 className="text-xl font-bold text-light-text dark:text-dark-text">Score Distribution</h3>
             </div>
 
-            <div className="space-y-5">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-light-text dark:text-dark-text">Correct</span>
-                  <span className="text-sm font-bold text-primary">
-                    {((correctCount / totalQuestions) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="w-full bg-light-section dark:bg-dark-section rounded-full h-3 border border-light-border dark:border-dark-border overflow-hidden">
-                  <div
-                    className="bg-primary h-full transition-all duration-1000"
-                    style={{ width: `${(correctCount / totalQuestions) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  dataKey="value"
+                  label={({ name, value }) => value > 0 ? `${name}: ${value}` : ''}
+                  labelLine={false}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
 
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-light-text dark:text-dark-text">Incorrect</span>
-                  <span className="text-sm font-bold text-red-500">
-                    {((incorrectCount / totalQuestions) * 100).toFixed(1)}%
+            {/* Legend */}
+            <div className="flex justify-center gap-6 mt-4">
+              {chartData.map((entry, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  ></div>
+                  <span className="text-sm text-light-text dark:text-dark-text">
+                    {entry.name}: <span className="font-semibold">{entry.value}</span>
                   </span>
                 </div>
-                <div className="w-full bg-light-section dark:bg-dark-section rounded-full h-3 border border-light-border dark:border-dark-border overflow-hidden">
-                  <div
-                    className="bg-red-500 h-full transition-all duration-1000"
-                    style={{ width: `${(incorrectCount / totalQuestions) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-light-text dark:text-dark-text">Unattempted</span>
-                  <span className="text-sm font-bold text-light-text-secondary dark:text-dark-text-secondary">
-                    {((unattemptedCount / totalQuestions) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="w-full bg-light-section dark:bg-dark-section rounded-full h-3 border border-light-border dark:border-dark-border overflow-hidden">
-                  <div
-                    className="bg-light-text-secondary dark:bg-dark-text-secondary h-full transition-all duration-1000"
-                    style={{ width: `${(unattemptedCount / totalQuestions) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
+        {/* Performance Suggestions */}
         <div className="bg-light-card dark:bg-dark-card rounded-card shadow-card-light dark:shadow-card-dark p-8 mb-8 border border-light-border dark:border-dark-border">
           <div className="flex items-center gap-3 mb-6">
             <TrendingUp className="w-6 h-6 text-primary" />
@@ -318,6 +415,7 @@ export function QuizResults({
           </div>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <button
             onClick={onViewSolutions}
@@ -335,6 +433,7 @@ export function QuizResults({
           </button>
         </div>
 
+        {/* Pro Tip */}
         <div className="bg-light-section dark:bg-dark-section border-l-4 border-primary p-6 rounded-card">
           <div className="flex items-start gap-3">
             <Target className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />

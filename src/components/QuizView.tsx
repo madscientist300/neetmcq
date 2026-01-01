@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { QuestionNavRing } from './QuestionNavRing';
@@ -153,6 +153,25 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
   const attemptedCount = questionStatuses.filter(s => s.attempted).length;
   const correctCount = questionStatuses.filter(s => s.correct === true).length;
 
+  // Calculate best streak (longest consecutive correct answers)
+  const calculateBestStreak = () => {
+    let maxStreak = 0;
+    let currentStreak = 0;
+
+    questionStatuses.forEach((status) => {
+      if (status.correct === true) {
+        currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else if (status.attempted) {
+        currentStreak = 0;
+      }
+    });
+
+    return maxStreak;
+  };
+
+  const bestStreak = calculateBestStreak();
+
   const isLastQuestion = currentIndex === questions.length - 1;
   const showSubmitButton = selectedOption && !currentStatus.attempted;
   const showNextButton = !selectedOption || currentStatus.attempted;
@@ -200,6 +219,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
         attemptedCount={attemptedCount}
         correctCount={correctCount}
         timeSpent={timeSpent}
+        bestStreak={bestStreak}
         onViewSolutions={viewSolutions}
         onStartNew={onExit}
       />
@@ -209,36 +229,11 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
   const renderQuestion = (question: Question, index: number) => {
     const status = questionStatuses[index];
 
-    // Memoize question text rendering
-    const questionTextMarkup = useMemo(() => (
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex, rehypeRaw]}
-      >
-        {question.question_text || ''}
-      </ReactMarkdown>
-    ), [question.question_text]);
 
-    // Memoize option rendering
-    const optionMarkups = useMemo(() => ({
-      a: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_a || ''}</ReactMarkdown>,
-      b: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_b || ''}</ReactMarkdown>,
-      c: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_c || ''}</ReactMarkdown>,
-      d: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_d || ''}</ReactMarkdown>,
-    }), [question.option_a, question.option_b, question.option_c, question.option_d]);
 
-    // Memoize explanation rendering
-    const explanationMarkup = useMemo(() => {
-      if (!question.explanation) return null;
-      return (
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeKatex, rehypeRaw]}
-        >
-          {question.explanation}
-        </ReactMarkdown>
-      );
-    }, [question.explanation]);
+
+
+
 
     return (
       <div key={question.id} className="bg-white/70 dark:bg-dark-card/30 backdrop-blur-xl rounded-card shadow-card-light dark:shadow-card-dark p-8 mb-6 border border-white/50 dark:border-dark-border/50">
@@ -249,7 +244,12 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
         </div>
 
         <div className="prose dark:prose-invert max-w-none mb-8 text-light-text dark:text-dark-text text-lg leading-relaxed markdown-preview">
-          {questionTextMarkup}
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeKatex, rehypeRaw]}
+          >
+            {question.question_text || ''}
+          </ReactMarkdown>
         </div>
 
         {question.question_image_url && (
@@ -276,7 +276,12 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
                   </span>
                 </div>
                 <div className="flex-1 text-light-text dark:text-dark-text markdown-preview">
-                  {optionMarkups[option as 'a' | 'b' | 'c' | 'd']}
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex, rehypeRaw]}
+                  >
+                    {question[`option_${option}` as keyof Question] as string || ''}
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>
@@ -289,7 +294,12 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
               Explanation
             </h4>
             <div className="text-light-text-secondary dark:text-dark-text-secondary text-sm leading-relaxed markdown-preview overflow-x-auto max-w-full break-words">
-              {explanationMarkup}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex, rehypeRaw]}
+              >
+                {question.explanation}
+              </ReactMarkdown>
             </div>
           </div>
         )}
@@ -312,7 +322,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-100 dark:from-gray-900 dark:via-blue-900 dark:to-black p-0 sm:p-4 pb-safe">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-100 dark:from-black dark:via-gray-900 dark:to-black p-0 sm:p-4 pb-safe">
       {showConfirmFinish && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">

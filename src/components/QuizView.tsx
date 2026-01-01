@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { QuestionNavRing } from './QuestionNavRing';
@@ -209,6 +209,37 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
   const renderQuestion = (question: Question, index: number) => {
     const status = questionStatuses[index];
 
+    // Memoize question text rendering
+    const questionTextMarkup = useMemo(() => (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex, rehypeRaw]}
+      >
+        {question.question_text || ''}
+      </ReactMarkdown>
+    ), [question.question_text]);
+
+    // Memoize option rendering
+    const optionMarkups = useMemo(() => ({
+      a: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_a || ''}</ReactMarkdown>,
+      b: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_b || ''}</ReactMarkdown>,
+      c: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_c || ''}</ReactMarkdown>,
+      d: <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{question.option_d || ''}</ReactMarkdown>,
+    }), [question.option_a, question.option_b, question.option_c, question.option_d]);
+
+    // Memoize explanation rendering
+    const explanationMarkup = useMemo(() => {
+      if (!question.explanation) return null;
+      return (
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
+          rehypePlugins={[rehypeKatex, rehypeRaw]}
+        >
+          {question.explanation}
+        </ReactMarkdown>
+      );
+    }, [question.explanation]);
+
     return (
       <div key={question.id} className="bg-white/70 dark:bg-dark-card/30 backdrop-blur-xl rounded-card shadow-card-light dark:shadow-card-dark p-8 mb-6 border border-white/50 dark:border-dark-border/50">
         <div className="mb-6">
@@ -218,12 +249,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
         </div>
 
         <div className="prose dark:prose-invert max-w-none mb-8 text-light-text dark:text-dark-text text-lg leading-relaxed markdown-preview">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeKatex, rehypeRaw]}
-          >
-            {question.question_text || ''}
-          </ReactMarkdown>
+          {questionTextMarkup}
         </div>
 
         {question.question_image_url && (
@@ -250,12 +276,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
                   </span>
                 </div>
                 <div className="flex-1 text-light-text dark:text-dark-text markdown-preview">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm, remarkMath]}
-                    rehypePlugins={[rehypeKatex, rehypeRaw]}
-                  >
-                    {question[`option_${option}` as keyof Question] as string || ''}
-                  </ReactMarkdown>
+                  {optionMarkups[option as 'a' | 'b' | 'c' | 'd']}
                 </div>
               </div>
             </div>
@@ -268,12 +289,7 @@ export function QuizView({ questions, categoryName, timeLimit, onExit }: QuizVie
               Explanation
             </h4>
             <div className="text-light-text-secondary dark:text-dark-text-secondary text-sm leading-relaxed markdown-preview overflow-x-auto max-w-full break-words">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeKatex, rehypeRaw]}
-              >
-                {question.explanation}
-              </ReactMarkdown>
+              {explanationMarkup}
             </div>
           </div>
         )}

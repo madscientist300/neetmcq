@@ -15,10 +15,10 @@ export default {
         },
         dark: {
           bg: '#000000',        // Pure black background
-          section: '#0a0a0a',   // Very dark gray for sections
-          card: '#0a0a0a',      // Very dark gray for cards (slight depth)
-          hover: '#1a1a1a',     // Subtle hover state
-          border: '#2a2a2a',    // Visible borders in black mode
+          section: '#1a1a1a',   // Dark gray for sections (easier on eyes)
+          card: '#1a1a1a',      // Dark gray for cards (easier on eyes)
+          hover: '#2a2a2a',     // Subtle hover state
+          border: '#3a3a3a',    // Visible borders in black mode
           text: '#ffffff',      // Pure white text
           'text-secondary': '#a3a3a3', // Gray text for secondary content
         },
